@@ -1,7 +1,7 @@
 let db;
 const request = indexedDB.open("budget", 1)
 request.onupgradeneeded = ({target}) => {
-    let db = target.results;
+    let db = target.result;
     db.createObjectStore("pending", {
         autoIncrement: true
     })
@@ -12,15 +12,15 @@ request.onerror = function(e) {
   };
   
 request.onsuccess = function(e) {
-    db = e.target.results;
+    db = e.target.result;
     if (navigator.onLine){
         updateDatabase();
     }
 }
 function updateDatabase(){
-    const transaction = db.transaction(["pending"], "rewrite");
+    const transaction = db.transaction(["pending"], "readwrite");
     const store = transaction.objectStore("pending");
-    const getAll = store.getall();
+    const getAll = store.getAll();
     getAll.onsuccess = function() {
         if (getAll.result.length > 0) {
             fetch("/api/transaction/bulk", {
@@ -33,7 +33,7 @@ function updateDatabase(){
             }).then(response => {
                 return response.json()
             }).then(() => {
-                const transaction = db.transaction(["pending"], "rewrite");
+                const transaction = db.transaction(["pending"], "readwrite");
                 const store = transaction.objectStore("pending");
                 store.clear();
             }) 
@@ -41,8 +41,8 @@ function updateDatabase(){
     }
 }
 function saveRecord(trans){
-    const transaction = db.transaction(["pending"], "rewrite");
+    const transaction = db.transaction(["pending"], "readwrite");
     const store = transaction.objectStore("pending");
     store.add(trans);
 }
-window.addEventListener(onLine, updateDatabase) 
+window.addEventListener("online", updateDatabase) 
